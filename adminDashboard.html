@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 250px;
+            background: #007bff;
+            color: white;
+            height: 100%;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar img {
+            height: 60px;
+            margin-bottom: 1rem;
+        }
+        .sidebar h2 {
+            margin: 0 0 1rem;
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 0;
+            display: block;
+        }
+        .sidebar a:hover {
+            background-color: #0056b3;
+        }
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: #007bff;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .dashboard-header img {
+            height: 40px; /* Ajuste conforme necessário */
+        }
+        .dashboard-header h1 {
+            margin: 0;
+            flex: 1;
+            text-align: center;
+        }
+        .btn-print, .btn-refresh {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .btn-print {
+            background-color: #28a745;
+            border: none;
+            color: white;
+        }
+        .btn-print:hover {
+            background-color: #218838;
+        }
+        .btn-refresh {
+            background-color: #ffc107;
+            border: none;
+            color: white;
+            margin-left: 10px;
+        }
+        .btn-refresh:hover {
+            background-color: #e0a800;
+        }
+        .alert {
+            margin-bottom: 20px;
+            padding: 1rem;
+            border-radius: 4px;
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .alert.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .chart-container {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .search-bar {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        .search-bar input {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            flex: 1;
+        }
+        .search-bar button {
+            padding: 0.5rem 1rem;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .search-bar button:hover {
+            background-color: #0056b3;
+        }
+        .quick-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .quick-stats div {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            margin-right: 20px;
+        }
+        .quick-stats div:last-child {
+            margin-right: 0;
+        }
+        .activity-log {
+            margin-top: 20px;
+        }
+        .activity-log h2 {
+            margin-bottom: 10px;
+        }
+        .activity-log ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .activity-log li {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+        @media print {
+            .btn-print, .btn-refresh {
+                display: none;
+            }
+            table {
+                border-collapse: collapse;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 8px;
+            }
+            th {
+                background-color: #f4f4f4;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Admin Panel</h2>
+        <a href="adminDashboard.html">Dashboard</a>
+        <a href="orders.html">Orders</a>
+        <a href="products.html">Products</a>
+        <a href="settings.html">Settings</a>
+    </div>
+    <div class="main-content">
+        <div class="dashboard-header">
+            <img src="/assets/Design sem nome.png" alt="Logo"> <!-- Substitua logo.png pelo caminho do seu logotipo -->
+            <h1>Admin Dashboard</h1>
+            <div>
+                <button class="btn-print" onclick="window.print()">Imprimir Pedidos</button>
+                <button class="btn-refresh" onclick="fetchOrders()">Atualizar Dados</button>
+            </div>
+        </div>
+        <div class="alert" id="alertMessage" style="display: none;">
+            <!-- Mensagens de alerta serão inseridas aqui -->
+        </div>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Pesquisar pedidos ou produtos">
+            <button onclick="search()">Buscar</button>
+        </div>
+        <div class="quick-stats">
+            <div>
+                <h3>Total Pedidos</h3>
+                <p id="totalOrders">0</p>
+            </div>
+            <div>
+                <h3>Total Receita</h3>
+                <p id="totalRevenue">R$0.00</p>
+            </div>
+            <div>
+                <h3>Produtos em Estoque</h3>
+                <p id="totalProducts">0</p>
+            </div>
+        </div>
+        <div class="chart-container">
+            <canvas id="ordersChart"></canvas>
+        </div>
+        <div class="summary">
+            <h2>Resumo dos Pedidos</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Quantidade</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTableBody">
+                    <!-- Dados dinâmicos dos pedidos serão inseridos aqui -->
+                </tbody>
+            </table>
+        </div>
+        <div class="activity-log">
+            <h2>Histórico de Atividades</h2>
+            <ul id="activityLogList">
+                <!-- Mensagens de atividade serão inseridas aqui -->
+            </ul>
+        </div>
+        <div class="chart-container">
+            <h2>Gráfico de Receita Mensal</h2>
+            <canvas id="monthlyRevenueChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Função para exibir mensagens de alerta
+        function showAlert(message, type = 'error') {
+            const alertElement = document.getElementById('alertMessage');
+            alertElement.textContent = message;
+            alertElement.className = `alert ${type}`;
+            alertElement.style.display
+            alertElement.style.display = 'block';
+        }
+
+        // Função para buscar pedidos da API e atualizar a dashboard
+        function fetchOrders() {
+            fetch('http://localhost:3000/api/orders') // URL do backend para buscar pedidos
+                .then(response => response.json())
+                .then(orders => {
+                    const tableBody = document.getElementById('ordersTableBody');
+                    const totalOrders = document.getElementById('totalOrders');
+                    const totalRevenue = document.getElementById('totalRevenue');
+                    const totalProducts = document.getElementById('totalProducts');
+                    const activityLogList = document.getElementById('activityLogList');
+                    
+                    tableBody.innerHTML = ''; // Limpa a tabela antes de adicionar os novos pedidos
+
+                    let totalQuantity = 0;
+                    let totalAmount = 0;
+                    let productCount = 0; // Inicializa o contador de produtos
+
+                    orders.forEach(order => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${order.item}</td>
+                            <td>${order.quantity}</td>
+                            <td>R$${order.price.toFixed(2)}</td>
+                        `;
+                        tableBody.appendChild(row);
+
+                        totalQuantity += order.quantity;
+                        totalAmount += order.price;
+                        productCount += 1; // Contabiliza cada produto
+                    });
+
+                    totalOrders.textContent = `${totalQuantity}`;
+                    totalRevenue.textContent = `R$${totalAmount.toFixed(2)}`;
+                    totalProducts.textContent = `${productCount}`; // Atualiza o total de produtos
+
+                    // Atualizar gráfico de pedidos
+                    const labels = orders.map(order => order.item);
+                    const data = orders.map(order => order.quantity);
+
+                    const ctxOrders = document.getElementById('ordersChart').getContext('2d');
+                    new Chart(ctxOrders, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Quantidade de Pedidos',
+                                data: data,
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+
+                    // Atualizar gráfico de receita mensal
+                    const monthlyLabels = orders.reduce((acc, order) => {
+                        const month = new Date(order.date).toLocaleString('default', { month: 'short' });
+                        acc[month] = (acc[month] || 0) + order.price;
+                        return acc;
+                    }, {});
+
+                    const monthlyData = Object.values(monthlyLabels);
+                    const monthlyChartLabels = Object.keys(monthlyLabels);
+
+                    const ctxMonthlyRevenue = document.getElementById('monthlyRevenueChart').getContext('2d');
+                    new Chart(ctxMonthlyRevenue, {
+                        type: 'line',
+                        data: {
+                            labels: monthlyChartLabels,
+                            datasets: [{
+                                label: 'Receita Mensal',
+                                data: monthlyData,
+                                backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                                borderColor: 'rgba(153, 102, 255, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+
+                    // Atualizar histórico de atividades
+                    activityLogList.innerHTML = ''; // Limpa o histórico antes de adicionar novas entradas
+                    orders.forEach(order => {
+                        const logEntry = document.createElement('li');
+                        logEntry.textContent = `Pedido de ${order.item} adicionado com ${order.quantity} unidades. Total: R$${order.price.toFixed(2)}.`;
+                        activityLogList.appendChild(logEntry);
+                    });
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar pedidos:', error);
+                    showAlert('Erro ao buscar pedidos. Por favor, tente novamente.', 'error');
+                });
+        }
+
+        // Função de busca
+        function search() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#ordersTableBody tr');
+
+            rows.forEach(row => {
+                const item = row.cells[0].textContent.toLowerCase();
+                if (item.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Chama a função fetchOrders ao carregar a página
+        window.onload = fetchOrders;
+    </script>
+</body>
+</html>
